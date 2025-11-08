@@ -531,3 +531,47 @@ Output:<br>
 <ul>
   <li>All tests passing and correct job state transitions confirm a fully functional queue system.</li>
 </ul>
+
+<h2>Demo Folder</h2>
+The <code>demo/</code> directory provides an automated example of the job queue system in action.
+<h3>Purpose</h3>
+Demonstrates:
+<ul>
+  <li>Adding both successful and failing jobs.</li>
+  <li>Starting a background worker.</li>
+  <li>Viewing processed and failed (<strong>DLQ</strong>) jobs.</li>
+  <li>Automatically stopping the worker after execution.</li>
+</ul>
+<h3>Usage</h3>
+
+```bash
+bash ./demo/demo.sh
+```
+<h4>What Happens</h4>
+<ul>
+  <li>Initializes a new <code>queue.db</code>.</li>
+  <li>Enqueues:
+    <ul>
+      <li><strong>job-ok</strong> — a successful job.</li>
+      <li><strong>job-bad</strong> — a failing job (goes to <strong>DLQ</strong>).</li>
+    </ul>
+  </li>
+  <li>Starts a background worker and processes jobs.</li>
+  <li>Displays:
+    <ul>
+      <li>Job status summary.</li>
+      <li>Pending jobs, if any.</li>
+      <li>Dead Letter Queue (<strong>DLQ</strong>) contents.</li>
+    </ul>
+  </li>
+  <li>Stops all workers after execution.</li>
+</ul>
+
+<h4>Output</h4>
+<ul>
+  <li><strong>Worker logs</strong> → <code>demo/worker.out</code></li>
+  <li><strong>Job logs</strong> → <code>logs/job_&lt;id&gt;.log</code></li>
+</ul>
+<p align="center">
+  <img width="1876" height="656" alt="image" src="https://github.com/user-attachments/assets/f0b4c91d-0afe-400e-958b-24aeac88464e" />
+</p>
