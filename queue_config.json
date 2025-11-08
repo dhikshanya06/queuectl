@@ -1,0 +1,1 @@
+{"max_retries": 3, "base_backoff": 2.0, "default_timeout": null}
