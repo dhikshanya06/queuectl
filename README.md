@@ -43,7 +43,18 @@ sudo ln -s "$(pwd)/queuectl.py" /usr/local/bin/queuectl
 queuectl status
 ```
 
-<h2>2. Usage Examples</h2>  
+<h2>2. Usage Examples</h2> 
+<h3>CLI Help</h3>
+You can view all available commands and options using:
+
+```bash
+queuectl --help
+```
+Output:<br>
+<p align="center">
+  <img width="1869" height="444" alt="image" src="https://github.com/user-attachments/assets/4b6248bb-4aa1-4d49-be14-a128daf21402" />
+</p>
+
 <h3>Enqueue</h3>
 Add a new job to the queue (JSON string; command required; other fields optional).
 
@@ -174,6 +185,10 @@ Output:<br>
   <img width="1873" height="313" alt="image" src="https://github.com/user-attachments/assets/c7570667-94b4-48fe-8344-a3a7afa4b1a0" />
 </p>
 View jobs in DLQ:
+
+```bash
+queuectl dlq list
+```
 Output:<br>
 <p align="center">
   <img width="1873" height="99" alt="image" src="https://github.com/user-attachments/assets/a4c4987e-2bb7-419c-8c99-92b89834c32a" />
@@ -219,8 +234,8 @@ Output:<br>
 Set global defaults (persisted in queue_config.json):
 
 ```bash
-python3 queuectl.py config set max_retries 5
-python3 queuectl.py config set base_backoff 3.0
+queuectl config set max_retries 5
+queuectl config set base_backoff 3.0
 ```
 Output:<br>
 <p align="center">
@@ -241,7 +256,133 @@ Output:<br>
   <img width="1874" height="181" alt="image" src="https://github.com/user-attachments/assets/91fbc297-f014-47ad-a2b4-eb6959d894d4" />
 </p>
 
-<h2>Architecture Overview</h2>
+<h3>Job timeout handling</h3>
+Kill a job if it runs longer than timeout_seconds. This is considered a failure, and the job will be retried.
+Enqueue:
+
+```bash
+queuectl enqueue '{"id":"timeout-job","command":"sleep 10","timeout_seconds":5,"max_retries":2}'
+```
+<p align="center">
+  <img width="1874" height="89" alt="image" src="https://github.com/user-attachments/assets/a03bb397-49b6-4659-bb65-cc885b94cd6d" />
+</p>
+Run:
+
+```bash
+queuectl worker start --count 1
+```
+<p align="center">
+  <img width="1873" height="156" alt="image" src="https://github.com/user-attachments/assets/13f645b4-cca9-43ad-a848-3a737a08aca8" />
+</p>
+<ul>
+  <li>The worker will stop the command after about 5 seconds and mark it as failed.</li>
+  <li>Retry occurs based on <code>max_retries</code> and <code>backoff</code>. If all retries fail, the job moves to <strong>DLQ</strong>.</li>
+</ul>
+Verify:
+
+```bash
+queuectl dlq list                # see if job moved to DLQ after retries
+```
+```bash
+queuectl logs timeout-job        # view job's log (or tail the file: logs/job_timeout-job.log)
+# inside the log you should see a TIMEOUT or similar entry
+```
+<p align="center">
+  <img width="1876" height="340" alt="image" src="https://github.com/user-attachments/assets/5c318910-2a03-4f05-9ee0-7dddaa3d5c54" />
+</p>
+
+<h3>Job priority queues</h3>
+Higher numeric priority is processed first. (Default priority = 0.)<br>
+Enqueue examples
+
+```bash
+queuectl enqueue '{"id":"low-priority","command":"echo low","priority":1}'
+```
+```bash
+queuectl enqueue '{"id":"high-priority","command":"echo high","priority":10}'
+```
+<p align="center">
+  <img width="1876" height="191" alt="image" src="https://github.com/user-attachments/assets/6e71660a-fbdd-41a7-ae80-ecc9e8d7636f" />
+</p>
+Run:
+
+```bash
+queuectl worker start --count 1
+```
+Output:<br>
+<p align="center">
+  <img width="1877" height="178" alt="image" src="https://github.com/user-attachments/assets/4b87d3b1-0b27-4eab-b258-e839ca78904d" />
+</p>
+<ul>
+  <li><strong>High-priority</strong> runs before <strong>low-priority</strong>, even if enqueued later.</li>
+</ul>
+
+<h3>Scheduled / delayed jobs (run_at)</h3>
+Set run_at (ISO 8601 UTC) so the job is only eligible after that time.<br>
+Enqueue example:
+
+```bash
+queuectl enqueue '{"id":"scheduled-job","command":"echo scheduled","run_at":"2025-11-09T10:00:00Z"}'
+```
+<p align="center">
+  <img width="1871" height="88" alt="image" src="https://github.com/user-attachments/assets/639cd5a5-a462-42a3-a4c1-f79730110fd2" />
+</p>
+Run:
+
+```bash
+queuectl worker start --count 1
+```
+<p align="center">
+  <img width="1878" height="104" alt="image" src="https://github.com/user-attachments/assets/487d1097-8088-4b07-83c3-a8db9f4ea943" />
+</p>
+<ul>
+  <li>Job will stay <strong>pending</strong> until <code>available_at</code>, the <code>run_at</code> time.</li>
+  <li>After that, a worker will pick it up.</li>
+</ul>
+Verify:
+
+```bash
+queuectl list --state pending     # shows scheduled-job until run_at passes
+```
+<p align="center">
+  <img width="1876" height="90" alt="image" src="https://github.com/user-attachments/assets/5fbf0b4b-ec3a-4076-88de-1029da30500a" />
+</p>
+
+<h3>Job output logging</h3>
+Captures stdout and stderr for each job and saves them to a log file. The path is stored in stdout_log.<br>
+Enqueue example:
+
+```bash
+queuectl enqueue '{"id":"logjob","command":"echo hello && ls nonexistent","max_retries":1}'
+```
+<p align="center">
+  <img width="1880" height="82" alt="image" src="https://github.com/user-attachments/assets/cf77fd47-c83a-49b9-b648-7ce293950f2e" />
+</p>
+Run:
+
+```bash
+queuectl worker start --count 1
+```
+<p align="center">
+  <img width="1868" height="159" alt="image" src="https://github.com/user-attachments/assets/3077fe0e-d16f-4eb8-8b2c-a28cd5983e80" />
+</p>
+<h4>Where logs are stored</h4>
+<ul>
+  <li>Default per-job log: <code>logs/job_&lt;id&gt;.log</code> (e.g. <code>logs/job_logjob.log</code>).</li>
+</ul>
+View logs:
+
+```bash
+queuectl logs logjob 
+```
+<p align="center">
+  <img width="1872" height="216" alt="image" src="https://github.com/user-attachments/assets/c8430edb-8979-49f6-8f06-c32864002e72" />
+</p>
+<ul>
+  <li>Log includes <code>stdout</code>, <code>stderr</code>, and markers like <code>START ...</code> / <code>END ... rc=...</code> or timeout/exception lines.</li>
+</ul>
+  
+<h2>3. Architecture Overview</h2>
 <h3>Job Lifecycle</h3>
 Each job moves through these states: <br>
 <pre>
@@ -376,7 +517,7 @@ SQLite’s locking makes sure that only one worker takes each job. There are no 
   </tbody>
 </table>
 
-<h2>Assumptions & Trade-offs</h2>
+<h2>4. Assumptions & Trade-offs</h2>
 <h3>Assumptions</h3>
 <ul>
   <li>The system runs locally on a single machine and uses <code>SQLite</code> as the job store.</li>
@@ -440,7 +581,7 @@ SQLite’s locking makes sure that only one worker takes each job. There are no 
   <li><strong>Static configuration</strong> — any config change takes effect on the next run.</li>
 </ul>
 
-<h2>Testing Instructions</h2>
+<h2>5. Testing Instructions</h2>
 <h3>Initialize Environment</h3>
 
 ```bash
@@ -532,7 +673,7 @@ Output:<br>
   <li>All tests passing and correct job state transitions confirm a fully functional queue system.</li>
 </ul>
 
-<h2>Demo Folder</h2>
+<h2>6. Demo Folder</h2>
 The <code>demo/</code> directory provides an automated example of the job queue system in action.
 <h3>Purpose</h3>
 Demonstrates:
