@@ -12,13 +12,17 @@
 
 ```bash
 git clone https://github.com/dhikshanya06/queuectl.git
-
+```
+```basg
 cd queuectl
-
+```
+```bash
 python3 -m venv venv        #create virtual environment
-
+```
+```bash
 source venv/bin/activate    #on Windows: venv\Scripts\activate
- 
+ ```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -31,9 +35,11 @@ python3 queuectl.py status
 Or, make it accessible system-wide (so you can just type queuectl from anywhere):
 ```bash
 chmod +x queuectl.py
-
+```
+```bash
 sudo ln -s "$(pwd)/queuectl.py" /usr/local/bin/queuectl
-
+```
+```bash
 queuectl status
 ```
 
