@@ -48,7 +48,6 @@
 <p>Store timestamps in ISO 8601 UTC (...Z) and keep available_at for scheduled/delayed jobs.</p>
 
 <h3>Job lifecycle (step-by-step)</h3>
-
 <ul>
   <li><strong>Enqueue</strong> — insert job with:
     <ul>
@@ -96,6 +95,9 @@
     </ul>
   </li>
 </ul>
+<p align="center">
+  <img width="300" height="450" alt="design" src="https://github.com/user-attachments/assets/9a3a7710-36dc-437c-82ca-03477cf85074" />
+</p>
 
 <h3>Concurrency &amp; Safety</h3>
 <ul>
