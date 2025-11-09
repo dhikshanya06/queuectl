@@ -1,4 +1,25 @@
-# queuectl - CLI-Based Background Job Queue System
+# queuectl 
+<p><strong>QueueCTL</strong>, a lightweight job queue management system, is built with Python and operates from the command line. It focuses on reliability, persistence, and ease of use. You can enqueue shell commands and run them using parallel worker processes. It also handles failures, retries, and job prioritization automatically, with <code>SQLite</code> providing local persistence.</p>
+
+<p>It includes built-in support for:</p>
+<ul>
+  <li>Job retries with exponential backoff.</li>
+  <li>Configurable retry and timeout policies.</li>
+  <li>Job prioritization and scheduled (delayed) jobs.</li>
+  <li>Per-job output logging stored in the <code>logs/</code> directory.</li>
+  <li>Dead Letter Queue (<strong>DLQ</strong>) for permanently failed jobs.</li>
+  <li>A complete CLI (<code>queuectl</code>) for enqueuing, listing, and resetting.</li>
+  <li>Metrics reporting for job performance insights.</li>
+</ul>
+
+<p>This project showcases production-style queue processing with smooth worker shutdowns, data persistence, and a modular CLI structure. It is perfect for learning about asynchronous job systems and system design in Python.</p>
+
+<h2>Demo Video</h2>
+<p>
+  <a href="https://drive.google.com/file/d/1GuTTy4DFRwS0XXqWr0Q3eW2B6Xt8Z9OZ/view?usp=sharing" target="_blank">
+    Demo Video Link
+  </a>
+</p>
 
 <h2>1. Setup Instructions</h2>  
 <h3>Requirements</h3>
@@ -28,24 +49,28 @@ pip install -r requirements.txt
 
 <h3>Run Locally or Install Globally</h3>
 
-You can run the CLI tool directly using Python:
+<p>You can run the CLI tool directly using Python:</p>
+
 ```bash
 python3 queuectl.py status
 ```
-Or, make it accessible system-wide (so you can just type queuectl from anywhere):
+<p>Or, make it accessible system-wide (so you can just type queuectl from anywhere):</p>
+
 ```bash
 chmod +x queuectl.py
 ```
+
 ```bash
 sudo ln -s "$(pwd)/queuectl.py" /usr/local/bin/queuectl
 ```
+
 ```bash
 queuectl status
 ```
 
 <h2>2. Usage Examples</h2> 
 <h3>CLI Help</h3>
-You can view all available commands and options using:
+<p>You can view all available commands and options using:</p>
 
 ```bash
 queuectl --help
@@ -56,7 +81,7 @@ Output:<br>
 </p>
 
 <h3>Enqueue</h3>
-Add a new job to the queue (JSON string; command required; other fields optional).
+<p>Add a new job to the queue (JSON string; command required; other fields optional).</p>
 
 ```bash
 queuectl enqueue '{"id":"job1","command":"sleep 2"}'
@@ -66,7 +91,8 @@ Output:<br>
   <img width="1870" height="89" alt="image" src="https://github.com/user-attachments/assets/de673f45-bca6-442e-9a46-49b489239490" />
 </p>
 
-You can also override retry/backoff/priority or schedule:
+<p>You can also override retry/backoff/priority or schedule:</p>
+
 ```bash
 queuectl enqueue '{"id":"job2","command":"echo hello","max_retries":5,"base_backoff":2.0,"priority":10,"run_at":"2025-11-07T18:00:00Z"}'
 ```
@@ -76,7 +102,7 @@ Output:<br>
 </p>
 
 <h3>Start workers</h3>
-Start N worker processes in the foreground. Workers will automatically exit after --idle-timeout seconds if there are no pending jobs.
+<p>Start N worker processes in the foreground. Workers will automatically exit after --idle-timeout seconds if there are no pending jobs.</p>
 
 ```bash
 queuectl worker start --count 3 --idle-timeout 3
@@ -85,7 +111,7 @@ Output:<br>
 <p align="center">
   <img width="1873" height="261" alt="image" src="https://github.com/user-attachments/assets/a8d1d1c1-2069-4f63-b666-33b64356194d" />
 </p>
-What it does:
+<p>What it does:</p>
 <ul>
   <li>It spawns 3 worker processes that handle jobs at the same time.</li>
   <li>Each worker completes its current job when it receives <code>SIGINT</code> or <code>SIGTERM</code> for a graceful shutdown.</li>
@@ -93,8 +119,8 @@ What it does:
 </ul>
 
 <h3>Stop workers</h3>
-If you started workers in the foreground, press Ctrl+C to request a graceful shutdown.
-If you started workers in the background (nohup or systemd), stop them externally.
+<p>If you started workers in the foreground, press Ctrl+C to request a graceful shutdown.<br>
+If you started workers in the background (nohup or systemd), stop them externally.</p>
 
 ```bash
 # Foreground stop (same terminal)
@@ -105,14 +131,14 @@ pkill -f "queuectl worker start"
 ```
 
 <h3>Status/Reset</h3>
-Status - show queue summary <br>
-Show a summary count of jobs by state. Include a note about active workers:
+<p>Status - show queue summary <br>
+Show a summary count of jobs by state. Include a note about active workers:</p>
 
 ```bash
 queuectl status
 ```
 Output:<br>
-Non-empty queue example<br>
+<p>Non-empty queue example<br>
 <p align="center">
   <img width="1872" height="192" alt="image" src="https://github.com/user-attachments/assets/2cb3952a-2ca3-40b6-b8b3-67a056da1b7a" />
 </p>
@@ -121,12 +147,13 @@ Non-empty queue example<br>
   <li>Print a brief note about <strong>active workers</strong>, focusing on <strong>foreground workers only</strong>.</li>
 </ul>
 
-Reset — reinitialize database (safe, with backup) <br>
+<p>Reset — reinitialize database (safe, with backup) <br>
 Safely resets the queue by backing up the database and logs, removing the database files and logs, and recreating an empty database. Confirmation is required.
+  
 ```bash
 queuectl reset
 ```
-Empty queue example
+<p>Empty queue example</p>
 <p align="center">
   <img width="1874" height="360" alt="image" src="https://github.com/user-attachments/assets/94693803-43b7-4b9f-a987-1e5fc9bd469d" />
 </p>
@@ -139,14 +166,15 @@ Empty queue example
 </ul>
 
 <h3>List jobs</h3>
-List jobs, which you can filter by state: pending, processing, completed, dead:
-If you just ran queuectl reset, the queue will be empty. You can add a few sample jobs first to see the output:
+<p>List jobs, which you can filter by state: pending, processing, completed, dead:<br>
+If you just ran queuectl reset, the queue will be empty. You can add a few sample jobs first to see the output:</p>
 
 ```bash
 queuectl enqueue '{"id":"job1","command":"echo Hello"}'
 queuectl enqueue '{"id":"job2","command":"sleep 2"}'
 ```
-Then list jobs:
+<p>Then list jobs:</p>
+
 ```bash
 queuectl list
 ```
@@ -167,7 +195,7 @@ Output:<br>
 </p>
 
 <h3>Dead Letter Queue (DLQ)</h3>
-The Dead Letter Queue (DLQ) holds jobs that have permanently failed. This includes commands that did not succeed, even after all retry attempts.
+<p>The Dead Letter Queue (DLQ) holds jobs that have permanently failed. This includes commands that did not succeed, even after all retry attempts.</p>
 <ul>
   <li>Move a job to <strong>DLQ</strong> (simulate a failure).</li>
   <li>You can enqueue a job that will fail intentionally. For example, use a fake command name:</li>
@@ -184,7 +212,7 @@ Output:<br>
 <p align="center">
   <img width="1873" height="313" alt="image" src="https://github.com/user-attachments/assets/c7570667-94b4-48fe-8344-a3a7afa4b1a0" />
 </p>
-View jobs in DLQ:
+<p>View jobs in DLQ:</p>
 
 ```bash
 queuectl dlq list
@@ -195,7 +223,7 @@ Output:<br>
 </p>
 
 <h3>Retry a DLQ job</h3>
-To retry a failed job, move it back to pending and reset the attempts to 0.
+<p>To retry a failed job, move it back to pending and reset the attempts to 0.</p>
 
 ```bash
 queuectl dlq retry failjob
@@ -204,7 +232,7 @@ Output:<br>
 <p align="center">
   <img width="1873" height="83" alt="image" src="https://github.com/user-attachments/assets/3876d060-ab3c-4e07-b748-f64ef980cd63" />
 </p>
-You can verify:
+<p>You can verify:</p>
 
 ```bash
 queuectl list --state pending
@@ -220,7 +248,7 @@ Output:<br>
 </ul>
 
 <h3>Logs (per-job)</h3>
-Show the captured stdout and stderr for a job. Here are the last N lines:
+<p>Show the captured stdout and stderr for a job. Here are the last N lines:</p>
 
 ```bash
 queuectl logs job1 --tail 50
@@ -231,7 +259,7 @@ Output:<br>
 </p>
 
 <h3>Config (global defaults)</h3>
-Set global defaults (persisted in queue_config.json):
+<p>Set global defaults (persisted in queue_config.json):</p>
 
 ```bash
 queuectl config set max_retries 5
@@ -246,7 +274,7 @@ Output:<br>
 </ul>
 
 <h3>Metrics</h3>
-Show basic metrics and execution stats.
+<p>Show basic metrics and execution stats.</p>
 
 ```bash
 queuectl metrics
@@ -257,8 +285,8 @@ Output:<br>
 </p>
 
 <h3>Job timeout handling</h3>
-Kill a job if it runs longer than timeout_seconds. This is considered a failure, and the job will be retried.
-Enqueue:
+<p>Kill a job if it runs longer than timeout_seconds. This is considered a failure, and the job will be retried.<br>
+Enqueue:</p>
 
 ```bash
 queuectl enqueue '{"id":"timeout-job","command":"sleep 10","timeout_seconds":5,"max_retries":2}'
@@ -266,7 +294,7 @@ queuectl enqueue '{"id":"timeout-job","command":"sleep 10","timeout_seconds":5,"
 <p align="center">
   <img width="1874" height="89" alt="image" src="https://github.com/user-attachments/assets/a03bb397-49b6-4659-bb65-cc885b94cd6d" />
 </p>
-Run:
+<p>Run:</p>
 
 ```bash
 queuectl worker start --count 1
@@ -278,22 +306,22 @@ queuectl worker start --count 1
   <li>The worker will stop the command after about 5 seconds and mark it as failed.</li>
   <li>Retry occurs based on <code>max_retries</code> and <code>backoff</code>. If all retries fail, the job moves to <strong>DLQ</strong>.</li>
 </ul>
-Verify:
+<p>Verify:</p>
 
 ```bash
 queuectl dlq list                # see if job moved to DLQ after retries
 ```
 ```bash
 queuectl logs timeout-job        # view job's log (or tail the file: logs/job_timeout-job.log)
-# inside the log you should see a TIMEOUT or similar entry
+# inside the log, you should see a TIMEOUT or similar entry
 ```
 <p align="center">
   <img width="1876" height="340" alt="image" src="https://github.com/user-attachments/assets/5c318910-2a03-4f05-9ee0-7dddaa3d5c54" />
 </p>
 
 <h3>Job priority queues</h3>
-Higher numeric priority is processed first. (Default priority = 0.)<br>
-Enqueue examples
+<p>Higher numeric priority is processed first. (Default priority = 0.)<br>
+Enqueue examples</p>
 
 ```bash
 queuectl enqueue '{"id":"low-priority","command":"echo low","priority":1}'
@@ -304,7 +332,7 @@ queuectl enqueue '{"id":"high-priority","command":"echo high","priority":10}'
 <p align="center">
   <img width="1876" height="191" alt="image" src="https://github.com/user-attachments/assets/6e71660a-fbdd-41a7-ae80-ecc9e8d7636f" />
 </p>
-Run:
+<p>Run:</p>
 
 ```bash
 queuectl worker start --count 1
@@ -318,8 +346,8 @@ Output:<br>
 </ul>
 
 <h3>Scheduled / delayed jobs (run_at)</h3>
-Set run_at (ISO 8601 UTC) so the job is only eligible after that time.<br>
-Enqueue example:
+<p>Set run_at (ISO 8601 UTC) so the job is only eligible after that time.<br>
+Enqueue example:</p>
 
 ```bash
 queuectl enqueue '{"id":"scheduled-job","command":"echo scheduled","run_at":"2025-11-09T10:00:00Z"}'
@@ -327,7 +355,7 @@ queuectl enqueue '{"id":"scheduled-job","command":"echo scheduled","run_at":"202
 <p align="center">
   <img width="1871" height="88" alt="image" src="https://github.com/user-attachments/assets/639cd5a5-a462-42a3-a4c1-f79730110fd2" />
 </p>
-Run:
+<p>Run:</p>
 
 ```bash
 queuectl worker start --count 1
@@ -339,7 +367,7 @@ queuectl worker start --count 1
   <li>Job will stay <strong>pending</strong> until <code>available_at</code>, the <code>run_at</code> time.</li>
   <li>After that, a worker will pick it up.</li>
 </ul>
-Verify:
+<p>Verify:</p>
 
 ```bash
 queuectl list --state pending     # shows scheduled-job until run_at passes
@@ -349,8 +377,8 @@ queuectl list --state pending     # shows scheduled-job until run_at passes
 </p>
 
 <h3>Job output logging</h3>
-Captures stdout and stderr for each job and saves them to a log file. The path is stored in stdout_log.<br>
-Enqueue example:
+<p>Captures stdout and stderr for each job and saves them to a log file. The path is stored in stdout_log.<br>
+Enqueue example:</p>
 
 ```bash
 queuectl enqueue '{"id":"logjob","command":"echo hello && ls nonexistent","max_retries":1}'
@@ -358,7 +386,7 @@ queuectl enqueue '{"id":"logjob","command":"echo hello && ls nonexistent","max_r
 <p align="center">
   <img width="1880" height="82" alt="image" src="https://github.com/user-attachments/assets/cf77fd47-c83a-49b9-b648-7ce293950f2e" />
 </p>
-Run:
+<p>Run:</p>
 
 ```bash
 queuectl worker start --count 1
@@ -370,7 +398,7 @@ queuectl worker start --count 1
 <ul>
   <li>Default per-job log: <code>logs/job_&lt;id&gt;.log</code> (e.g. <code>logs/job_logjob.log</code>).</li>
 </ul>
-View logs:
+<p>View logs:</p>
 
 ```bash
 queuectl logs logjob 
@@ -384,7 +412,7 @@ queuectl logs logjob
   
 <h2>3. Architecture Overview</h2>
 <h3>Job Lifecycle</h3>
-Each job moves through these states: <br>
+<p>Each job moves through these states: <br></p>
 <pre>
   pending → processing → completed
               ↓
@@ -400,10 +428,10 @@ Each job moves through these states: <br>
 </ul>
 
 <h3>Retry & Exponential Backoff</h3>
-If a job fails, it retries automatically after a delay:
+<p>If a job fails, it retries automatically after a delay:</p>
 <pre>delay = base_backoff ^ attempts</pre>
-Example: If base_backoff = 2, retries happen after 2s, 4s, 8s, etc. <br>
-After exceeding max_retries, the job moves to the Dead Letter Queue (DLQ).
+<p>Example: If base_backoff = 2, retries happen after 2s, 4s, 8s, etc. <br>
+After exceeding max_retries, the job moves to the Dead Letter Queue (DLQ).</p>
 
 <h3>Data Persistence</h3>
 <table border="1" cellspacing="0" cellpadding="6">
@@ -437,7 +465,7 @@ After exceeding max_retries, the job moves to the Dead Letter Queue (DLQ).
     </tr>
   </tbody>
 </table>
-Data in queue.db is persistent — it survives restarts.
+<p>Data in queue.db is persistent — it survives restarts.</p>
 
 <h3>Worker Logic</h3>
 <h4>Each worker process:</h4>
@@ -452,12 +480,12 @@ Data in queue.db is persistent — it survives restarts.
     </ul>
   </li>
 </ul>
-Multiple workers can run simultaneously:
+<p>Multiple workers can run simultaneously:</p>
 
 ```bash
 queuectl worker start --count 3
 ```
-SQLite’s locking makes sure that only one worker takes each job. There are no duplicates.
+<p>SQLite’s locking makes sure that only one worker takes each job. There are no duplicates.</p>
 
 <h3>Graceful Shutdown</h3>
 <ul>
@@ -650,7 +678,7 @@ queuectl logs job-ok
 </ul>
 
 <h3>Verify Persistence</h3>
-Restart the program and check if jobs persist:
+<p>Restart the program and check if jobs persist:</p>
 
 ```bash
 queuectl status
@@ -674,9 +702,9 @@ Output:<br>
 </ul>
 
 <h2>6. Demo Folder</h2>
-The <code>demo/</code> directory provides an automated example of the job queue system in action.
+<p>The <code>demo/</code> directory provides an automated example of the job queue system in action.</p>
 <h3>Purpose</h3>
-Demonstrates:
+<p>Demonstrates:</p>
 <ul>
   <li>Adding both successful and failing jobs.</li>
   <li>Starting a background worker.</li>
