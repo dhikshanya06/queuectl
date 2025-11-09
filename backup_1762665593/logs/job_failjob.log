@@ -1,0 +1,16 @@
+--- START 2025-11-09T05:18:05.366640Z ---
+/bin/sh: 1: no_such_command: not found
+
+--- END 2025-11-09T05:18:05.397525Z rc=127 ---
+--- START 2025-11-09T05:18:07.507113Z ---
+/bin/sh: 1: no_such_command: not found
+
+--- END 2025-11-09T05:18:07.533433Z rc=127 ---
+--- START 2025-11-09T05:18:40.190023Z ---
+/bin/sh: 1: no_such_command: not found
+
+--- END 2025-11-09T05:18:40.218713Z rc=127 ---
+--- START 2025-11-09T05:18:45.445525Z ---
+/bin/sh: 1: no_such_command: not found
+
+--- END 2025-11-09T05:18:45.474005Z rc=127 ---

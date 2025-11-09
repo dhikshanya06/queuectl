@@ -1,0 +1,5 @@
+--- START 2025-11-09T05:19:39.063138Z ---
+hello
+ls: cannot access 'nonexistent': No such file or directory
+
+--- END 2025-11-09T05:19:39.069841Z rc=2 ---
