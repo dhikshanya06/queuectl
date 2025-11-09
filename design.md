@@ -144,7 +144,7 @@
 
 <h3>Testing &amp; Demo</h3>
 <ul>
-  <li><strong>Automated tests (pytest):</strong> covers:
+  <li><strong>Automated tests (pytest):</strong> <code>pytest -v</code> covers:
     <ul>
       <li>successful job execution,</li>
       <li>failing job → retries → DLQ,</li>
